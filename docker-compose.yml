@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  app:
+    build: .
+    working_dir: /var/www/portalassinaturas.com.br/public_html
+    volumes:
+      - ./:/var/www/portalassinaturas.com.br/public_html
+      - ./server/sites-available:/etc/apache2/sites-available
+      - ./server/logs:/var/log/apache2
+    ports:
+      - "80:80"
+    networks:
+      - rede-portalassinaturas
+networks:
+  rede-portalassinaturas:
+    driver: bridge
