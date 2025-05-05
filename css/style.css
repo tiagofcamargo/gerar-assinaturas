@@ -1,0 +1,146 @@
+/* css/style.css */
+@font-face {
+  font-family: 'Intelo';
+  src: url('../fonts/intelo/Intelo-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Intelo';
+  src: url('../fonts/intelo/Intelo-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+@font-face {
+  font-family: 'Intelo';
+  src: url('../fonts/intelo/Intelo-Italic.ttf') format('truetype');
+  font-style: italic;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  padding: 30px;
+  background: linear-gradient(144deg, rgba(66,72,147,1) 39%, rgba(213,124,49,1) 100%);
+  min-height: 100vh;
+}
+
+h2 {
+  text-align: center;
+  margin: 64px 0;
+  font-family: 'Intelo', sans-serif;
+  color: #fff;
+  font-weight: 400;
+  font-size: 32px;
+}
+
+.cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 60%;
+  margin: 0 auto;
+  gap: 20px;
+}
+
+.card {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.logo {
+  max-width: 300px;
+  transition: transform .3s ease;
+  filter: drop-shadow(1px 1px 3px #cfcfcf);
+}
+
+.logo:hover {
+  transform: scale(1.02);
+  cursor: pointer;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .3s ease;
+  z-index: 1000;
+}
+
+.modal.ativo {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 40px;
+  max-width: 500px;
+  width: 90%;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  position: relative;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #888;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #000;
+}
+
+label {
+  display: block;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.base-preview {
+  width: 100%;
+  margin-top: 15px;
+  border-radius: 4px;
+}
+
+.actions {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.actions button {
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.actions button:hover {
+  background-color: #45a049;
+}
