@@ -1,7 +1,7 @@
 <?php
 return [
     'amazonia' => [
-        'nome' => 'Empresa Ciclus Amazonia',
+        'nome' => 'Ciclus Amazônia',
         'logo' => 'assets/amazonia/btn.png',
         'base' => 'assets/amazonia/base.png',
         'fonte' => './fonts/HelveticaNeue.ttc',
@@ -9,7 +9,7 @@ return [
         'cor_telefone' => '#3b6533',
     ],
     'rio' => [
-        'nome' => 'Empresa Ciclus Rio',
+        'nome' => 'Ciclus Rio',
         'logo' => 'assets/rio/btn.png',
         'base' => 'assets/rio/base.png',
         'fonte' => './fonts/HelveticaNeue.ttc',
@@ -17,7 +17,7 @@ return [
         'cor_telefone' => '#43808e',
     ],
     'ambiental' => [
-        'nome' => 'Empresa CS Ambiental',
+        'nome' => 'Ciclus Ambiental',
         'logo' => 'assets/ambiental/btn.png',
         'base' => 'assets/ambiental/base.png',
         'fonte' => './fonts/intelo/Intelo-Regular.ttf',
@@ -25,7 +25,7 @@ return [
         'cor_telefone' => '#d57c31',
     ],
     'graos' => [
-        'nome' => 'Empresa CS Graos',
+        'nome' => 'CS Graos do Piauí',
         'logo' => 'assets/graos/btn.png',
         'base' => 'assets/graos/base.png',
         'fonte' => './fonts/intelo/Intelo-Regular.ttf',
@@ -33,7 +33,7 @@ return [
         'cor_telefone' => '#d57c31',
     ],
     'infra' => [
-        'nome' => 'Empresa CS Infra',
+        'nome' => 'CS Infra',
         'logo' => 'assets/infra/btn.png',
         'base' => 'assets/infra/base.png',
         'fonte' => './fonts/intelo/Intelo-Regular.ttf',
@@ -41,7 +41,7 @@ return [
         'cor_telefone' => '#d57c31',
     ],
     'mobi' => [
-        'nome' => 'Empresa CS Mobi',
+        'nome' => 'CS Mobi Cuiabá',
         'logo' => 'assets/mobi/btn.png',
         'base' => 'assets/mobi/base.png',
         'fonte' => './fonts/intelo/Intelo-Regular.ttf',

@@ -1,4 +1,3 @@
-<!-- index.php -->
 <?php
 $empresas = require __DIR__ . '/empresas.php';
 ?>
@@ -14,6 +13,7 @@ $empresas = require __DIR__ . '/empresas.php';
 
 <body>
   <h2>Selecione sua Empresa</h2>
+
   <div class="cards-container">
     <?php foreach ($empresas as $key => $empresa): ?>
       <button
@@ -33,24 +33,35 @@ $empresas = require __DIR__ . '/empresas.php';
     <div class="modal" id="modal-<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>" aria-hidden="true">
       <div class="modal-content" role="dialog" aria-labelledby="modal-title-<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>">
         <button class="close" aria-label="Fechar">&times;</button>
+
         <h3 id="modal-title-<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>">
           <?= htmlspecialchars($empresa['nome'], ENT_QUOTES, 'UTF-8') ?>
         </h3>
+
         <form action="gerar.php" method="POST" target="_blank">
           <input type="hidden" name="empresa" value="<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>">
 
-          <label for="nome-<?= $key ?>">Nome</label>
-          <input type="text" id="nome-<?= $key ?>" name="nome" required>
+          <!-- PRIMEIRO NOME -->
+          <label for="primeiro-nome-<?= $key ?>">Primeiro nome</label>
+          <input type="text" id="primeiro-nome-<?= $key ?>" name="primeiro_nome" required>
 
+          <!-- SOBRENOME -->
+          <label for="sobrenome-<?= $key ?>">Sobrenome</label>
+          <input type="text" id="sobrenome-<?= $key ?>" name="sobrenome" required>
+
+          <!-- CARGO -->
           <label for="cargo-<?= $key ?>">Cargo</label>
           <input type="text" id="cargo-<?= $key ?>" name="cargo" required>
 
+          <!-- E-MAIL -->
           <label for="email-<?= $key ?>">Email</label>
           <input type="email" id="email-<?= $key ?>" name="email" required>
 
+          <!-- TELEFONE -->
           <label for="telefone-<?= $key ?>">Telefone</label>
           <input type="tel" id="telefone-<?= $key ?>" name="telefone" required>
 
+          <!-- PRÉ-VISUALIZAÇÃO DA BASE -->
           <img
             src="<?= htmlspecialchars($empresa['base'], ENT_QUOTES, 'UTF-8') ?>"
             alt="Preview da base de <?= htmlspecialchars($empresa['nome'], ENT_QUOTES, 'UTF-8') ?>"
