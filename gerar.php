@@ -24,10 +24,6 @@ function hexToRgb(string $hex): array
     ];
 }
 
-/**
- * Quebra um texto em várias linhas, para caber em no máximo $maxWidth pixels.
- * Retorna um array de strings (linhas).
- */
 function wrapText($image, string $text, string $fontFile, int $fontSize, int $maxWidth): array
 {
     $words = preg_split('/\s+/', $text);
@@ -35,8 +31,8 @@ function wrapText($image, string $text, string $fontFile, int $fontSize, int $ma
     $current = '';
     foreach ($words as $word) {
         $test = $current === '' ? $word : $current . ' ' . $word;
-        $box = imagettfbbox($fontSize, 0, $fontFile, $test);
-        $w = $box[2] - $box[0];
+        $box  = imagettfbbox($fontSize, 0, $fontFile, $test);
+        $w    = $box[2] - $box[0];
         if ($w > $maxWidth && $current !== '') {
             $lines[] = $current;
             $current = $word;
@@ -59,8 +55,6 @@ $sobrenome    = trim($_POST['sobrenome']     ?? '');
 $cargo        = trim($_POST['cargo']        ?? '');
 $email        = trim($_POST['email']        ?? '');
 $telefone     = trim($_POST['telefone']     ?? '');
-
-// *** Novos campos vindos de empresas.php ***
 $endereco     = $empresas[$empresaKey]['endereco'] ?? '';
 $site         = $empresas[$empresaKey]['site']     ?? '';
 
@@ -70,29 +64,39 @@ if (! isset($empresas[$empresaKey])) {
 
 $nomeCompleto = trim("$primeiroNome $sobrenome");
 
-/****************** MONTAR VCARD ******************/
-$vcard = <<<VCF
-BEGIN:VCARD
-VERSION:3.0
-N:$sobrenome;$primeiroNome;;;
-FN:$nomeCompleto
-ORG:{$empresas[$empresaKey]['nome']}
-TITLE:$cargo
-TEL;TYPE=CELL:$telefone
-EMAIL:$email
-ADR;TYPE=WORK:;;{$endereco};;;;
-URL:{$site}
-END:VCARD
-VCF;
+/****************** MONTAR VCARD (com CRLF) ******************/
+$vcardLines = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    "N:$sobrenome;$primeiroNome;;;",
+    "FN:$nomeCompleto",
+    "ORG:{$empresas[$empresaKey]['nome']}",
+    "TITLE:$cargo",
+    "TEL;TYPE=CELL:$telefone",
+    "EMAIL:$email",
+    "ADR;TYPE=WORK:;;{$endereco};;;;",
+    "URL:{$site}",
+    'END:VCARD',
+];
+$vcard = implode("\r\n", $vcardLines) . "\r\n";
 
-/****************** GERAR QR CODE ******************/
+/****************** GERAR QR CODE (com margem e tamanho dinâmico) ******************/
+$len = strlen($vcard);
+if ($len > 300) {
+    $qrSide = 200;
+} elseif ($len > 200) {
+    $qrSide = 180;
+} else {
+    $qrSide = 120;
+}
+
 $qr = Builder::create()
     ->writer(new PngWriter())
     ->data($vcard)
     ->encoding(new Encoding('UTF-8'))
     ->errorCorrectionLevel(ErrorCorrectionLevel::High)
-    ->size(300)
-    ->margin(0)
+    ->size(300)   // QR inicial em 300×300 px
+    ->margin(4)   // quiet-zone mínima
     ->build();
 
 $qrGd = imagecreatefromstring($qr->getString());
@@ -106,19 +110,14 @@ if (! file_exists($basePath)) {
     die('Imagem base não encontrada.');
 }
 
-$imagemBase = @imagecreatefrompng($basePath);
-if (! $imagemBase) {
-    die('Falha ao carregar a imagem base.');
-}
+$imagemBase = imagecreatefrompng($basePath);
+$width      = imagesx($imagemBase);
+$height     = imagesy($imagemBase);
 
-$larguraBase = imagesx($imagemBase);
-$alturaBase  = imagesy($imagemBase);
-
-$canvas = imagecreatetruecolor($larguraBase, $alturaBase);
-$corBranca = imagecolorallocate($canvas, 255, 255, 255);
-imagefilledrectangle($canvas, 0, 0, $larguraBase, $alturaBase, $corBranca);
-
-imagecopy($canvas, $imagemBase, 0, 0, 0, 0, $larguraBase, $alturaBase);
+$canvas = imagecreatetruecolor($width, $height);
+$white  = imagecolorallocate($canvas, 255, 255, 255);
+imagefilledrectangle($canvas, 0, 0, $width, $height, $white);
+imagecopy($canvas, $imagemBase, 0, 0, 0, 0, $width, $height);
 imagedestroy($imagemBase);
 
 $imagem = $canvas;
@@ -126,19 +125,20 @@ imagealphablending($imagem, true);
 imagesavealpha($imagem, true);
 
 /****************** REDIMENSIONAR E COLOCAR QR ******************/
-$qrLado  = 120;
-$qrSmall = imagescale($qrGd, $qrLado, $qrLado);
+$qrSmall = imagescale($qrGd, $qrSide, $qrSide);
 imagedestroy($qrGd);
 
-$destX = imagesx($imagem) - $qrLado - 10;
-$destY = 10;
-imagecopy($imagem, $qrSmall, $destX, $destY, 0, 0, $qrLado, $qrLado);
+// Agora 5px de margem à direita e 5px do topo
+$destX = $width - $qrSide - 5;
+$destY = 5;
+
+imagecopy($imagem, $qrSmall, $destX, $destY, 0, 0, $qrSide, $qrSide);
 imagedestroy($qrSmall);
 
 /****************** DESENHAR TEXTOS ******************/
 // Cores
 list($r, $g, $b)    = hexToRgb($empresas[$empresaKey]['cor']);
-$corEmpresa         = imagecolorallocate($imagem, $r, $g, $b);
+$corNome            = imagecolorallocate($imagem, $r, $g, $b);
 $cinza              = imagecolorallocate($imagem, 128, 128, 128);
 list($rt, $gt, $bt) = hexToRgb($empresas[$empresaKey]['cor_telefone']);
 $corTelefone        = imagecolorallocate($imagem, $rt, $gt, $bt);
@@ -150,38 +150,35 @@ if (! file_exists($fontePath)) {
     die('Fonte não encontrada.');
 }
 
-// Parâmetros de layout
+// Layout
 $baseX       = 20;
 $baseYNome   = 50;
 $maxWidth    = 450 - $baseX - 10;
 $lineSpacing = 4;
 
-// --- Nome (font size 20) ---
+// Nome (font size 20)
 $nomeSize  = 20;
 $nomeLines = wrapText($imagem, $nomeCompleto, $fontePath, $nomeSize, $maxWidth);
 foreach ($nomeLines as $i => $line) {
     $y = $baseYNome + $i * ($nomeSize + $lineSpacing);
-    imagettftext($imagem, $nomeSize, 0, $baseX, $y, $corEmpresa, $fontePath, $line);
+    imagettftext($imagem, $nomeSize, 0, $baseX, $y, $corNome, $fontePath, $line);
 }
 
-// --- Cargo (font size 15) ---
+// Cargo (font size 15), sempre abaixo do nome
 $cargoSize   = 15;
 $cargoLines  = wrapText($imagem, $cargo, $fontePath, $cargoSize, $maxWidth);
-$cargoStartY = $baseYNome
-    + count($nomeLines) * ($nomeSize + $lineSpacing)
-    + 10;
+$cargoStartY = $baseYNome + count($nomeLines) * ($nomeSize + $lineSpacing) + 10;
 foreach ($cargoLines as $i => $line) {
     $y = $cargoStartY + $i * ($cargoSize + $lineSpacing);
     imagettftext($imagem, $cargoSize, 0, $baseX, $y, $cinza, $fontePath, $line);
 }
 
-// --- Telefone e E-mail (fixos) ---
+// Telefone e E-mail (fixos)
 imagettftext($imagem, 15, 0, 450, 50, $corTelefone, $fontePath, $telefone);
 imagettftext($imagem, 15, 0, 450, 80, $cinza,       $fontePath, $email);
 
-/****************** GERAR SAÍDA PNG ******************/
+/****************** SAÍDA PNG ******************/
 header('Content-Type: image/png');
 header('Content-Disposition: inline; filename="assinatura.png"');
 imagepng($imagem, null, 0);
-
 imagedestroy($imagem);
