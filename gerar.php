@@ -13,12 +13,7 @@ use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
 
-/**
- * Se preferir ocultar avisos de “Deprecated”:
- * error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
- */
-
-/****************** FUNÇÃO AUXILIAR ******************/
+/****************** FUNÇÕES AUXILIARES ******************/
 function hexToRgb(string $hex): array
 {
     $hex = ltrim($hex, '#');
@@ -29,8 +24,34 @@ function hexToRgb(string $hex): array
     ];
 }
 
+/**
+ * Quebra um texto em várias linhas, para caber em no máximo $maxWidth pixels.
+ * Retorna um array de strings (linhas).
+ */
+function wrapText($image, string $text, string $fontFile, int $fontSize, int $maxWidth): array
+{
+    $words = preg_split('/\s+/', $text);
+    $lines = [];
+    $current = '';
+    foreach ($words as $word) {
+        $test = $current === '' ? $word : $current . ' ' . $word;
+        $box = imagettfbbox($fontSize, 0, $fontFile, $test);
+        $w = $box[2] - $box[0];
+        if ($w > $maxWidth && $current !== '') {
+            $lines[] = $current;
+            $current = $word;
+        } else {
+            $current = $test;
+        }
+    }
+    if ($current !== '') {
+        $lines[] = $current;
+    }
+    return $lines;
+}
+
 /****************** LEITURA DAS ENTRADAS ******************/
-$empresas     = require 'empresas.php';
+$empresas     = require __DIR__ . '/empresas.php';
 
 $empresaKey   = $_POST['empresa']        ?? '';
 $primeiroNome = trim($_POST['primeiro_nome'] ?? '');
@@ -38,6 +59,10 @@ $sobrenome    = trim($_POST['sobrenome']     ?? '');
 $cargo        = trim($_POST['cargo']        ?? '');
 $email        = trim($_POST['email']        ?? '');
 $telefone     = trim($_POST['telefone']     ?? '');
+
+// *** Novos campos vindos de empresas.php ***
+$endereco     = $empresas[$empresaKey]['endereco'] ?? '';
+$site         = $empresas[$empresaKey]['site']     ?? '';
 
 if (! isset($empresas[$empresaKey])) {
     die('Empresa inválida.');
@@ -55,6 +80,8 @@ ORG:{$empresas[$empresaKey]['nome']}
 TITLE:$cargo
 TEL;TYPE=CELL:$telefone
 EMAIL:$email
+ADR;TYPE=WORK:;;{$endereco};;;;
+URL:{$site}
 END:VCARD
 VCF;
 
@@ -64,11 +91,10 @@ $qr = Builder::create()
     ->data($vcard)
     ->encoding(new Encoding('UTF-8'))
     ->errorCorrectionLevel(ErrorCorrectionLevel::High)
-    ->size(300)   // Tamanho original do QR antes do redimensionamento
+    ->size(300)
     ->margin(0)
     ->build();
 
-// Transforma o PNG gerado em resource GD
 $qrGd = imagecreatefromstring($qr->getString());
 if (! $qrGd) {
     die('Falha ao gerar o QR Code.');
@@ -85,69 +111,77 @@ if (! $imagemBase) {
     die('Falha ao carregar a imagem base.');
 }
 
-/**
- * Criar um “canvas branco” do mesmo tamanho da base.
- * Assim, eliminamos transparências na imagem-base.
- */
 $larguraBase = imagesx($imagemBase);
 $alturaBase  = imagesy($imagemBase);
 
 $canvas = imagecreatetruecolor($larguraBase, $alturaBase);
-// Aloca cor branca
 $corBranca = imagecolorallocate($canvas, 255, 255, 255);
-// Preenche todo o canvas com branco
 imagefilledrectangle($canvas, 0, 0, $larguraBase, $alturaBase, $corBranca);
 
-// Copia a base (que pode ter canal alpha) sobre o fundo branco
 imagecopy($canvas, $imagemBase, 0, 0, 0, 0, $larguraBase, $alturaBase);
 imagedestroy($imagemBase);
 
-// Agora $canvas é a “imagem” principal, com fundo branco
 $imagem = $canvas;
-
-// Ativar mistura de cores e preservar canal alpha (caso textos/QR usem transparência)
 imagealphablending($imagem, true);
 imagesavealpha($imagem, true);
 
 /****************** REDIMENSIONAR E COLOCAR QR ******************/
-$qrLado   = 120; // pixels finais do QR dentro da assinatura
-$qrSmall  = imagescale($qrGd, $qrLado, $qrLado);
+$qrLado  = 120;
+$qrSmall = imagescale($qrGd, $qrLado, $qrLado);
 imagedestroy($qrGd);
 
-$destX = imagesx($imagem) - $qrLado - 10; // 10 px de margem direita
-$destY = 10;                             // 10 px de margem superior
-
+$destX = imagesx($imagem) - $qrLado - 10;
+$destY = 10;
 imagecopy($imagem, $qrSmall, $destX, $destY, 0, 0, $qrLado, $qrLado);
 imagedestroy($qrSmall);
 
 /****************** DESENHAR TEXTOS ******************/
-// Cor do nome (variável para cada empresa)
-list($r, $g, $b) = hexToRgb($empresas[$empresaKey]['cor']);
-$corEmpresa      = imagecolorallocate($imagem, $r, $g, $b);
-
-// Cinza para cargos e e-mail
-$cinza = imagecolorallocate($imagem, 128, 128, 128);
-
-// Cor do telefone (variável para cada empresa)
+// Cores
+list($r, $g, $b)    = hexToRgb($empresas[$empresaKey]['cor']);
+$corEmpresa         = imagecolorallocate($imagem, $r, $g, $b);
+$cinza              = imagecolorallocate($imagem, 128, 128, 128);
 list($rt, $gt, $bt) = hexToRgb($empresas[$empresaKey]['cor_telefone']);
-$corTelefone      = imagecolorallocate($imagem, $rt, $gt, $bt);
+$corTelefone        = imagecolorallocate($imagem, $rt, $gt, $bt);
 
-// Caminho para a fonte TTF
+// Fonte
 $fontePath = $empresas[$empresaKey]['fonte']
-    ?? './fonts/liberation-fonts/ttf/LiberationSans-Regular.ttf';
+    ?? __DIR__ . '/fonts/liberation-fonts/ttf/LiberationSans-Regular.ttf';
 if (! file_exists($fontePath)) {
     die('Fonte não encontrada.');
 }
 
-// Escrever Nome (maior), Cargo, Telefone e Email
-imagettftext($imagem, 20, 0, 20, 50,  $corEmpresa,   $fontePath, $nomeCompleto);
-imagettftext($imagem, 15, 0, 20, 80,  $cinza,        $fontePath, $cargo);
-imagettftext($imagem, 15, 0, 450, 50, $corTelefone,  $fontePath, $telefone);
-imagettftext($imagem, 15, 0, 450, 80, $cinza,        $fontePath, $email);
+// Parâmetros de layout
+$baseX       = 20;
+$baseYNome   = 50;
+$maxWidth    = 450 - $baseX - 10;
+$lineSpacing = 4;
+
+// --- Nome (font size 20) ---
+$nomeSize  = 20;
+$nomeLines = wrapText($imagem, $nomeCompleto, $fontePath, $nomeSize, $maxWidth);
+foreach ($nomeLines as $i => $line) {
+    $y = $baseYNome + $i * ($nomeSize + $lineSpacing);
+    imagettftext($imagem, $nomeSize, 0, $baseX, $y, $corEmpresa, $fontePath, $line);
+}
+
+// --- Cargo (font size 15) ---
+$cargoSize   = 15;
+$cargoLines  = wrapText($imagem, $cargo, $fontePath, $cargoSize, $maxWidth);
+$cargoStartY = $baseYNome
+    + count($nomeLines) * ($nomeSize + $lineSpacing)
+    + 10;
+foreach ($cargoLines as $i => $line) {
+    $y = $cargoStartY + $i * ($cargoSize + $lineSpacing);
+    imagettftext($imagem, $cargoSize, 0, $baseX, $y, $cinza, $fontePath, $line);
+}
+
+// --- Telefone e E-mail (fixos) ---
+imagettftext($imagem, 15, 0, 450, 50, $corTelefone, $fontePath, $telefone);
+imagettftext($imagem, 15, 0, 450, 80, $cinza,       $fontePath, $email);
 
 /****************** GERAR SAÍDA PNG ******************/
 header('Content-Type: image/png');
 header('Content-Disposition: inline; filename="assinatura.png"');
-imagepng($imagem, null, 0); // compressão 0 = qualidade máxima
+imagepng($imagem, null, 0);
 
 imagedestroy($imagem);

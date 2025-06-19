@@ -7,6 +7,8 @@ return [
         'fonte' => './fonts/HelveticaNeue.ttc',
         'cor' => '#3b6533',
         'cor_telefone' => '#3b6533',
+        'endereco' => 'R. Jardim da Providência, 09 – Águas Lindas, Ananindeua – PA',
+        'site' => 'https://ciclusamazonia.com.br/',
     ],
     'rio' => [
         'nome' => 'Ciclus Rio',
@@ -15,6 +17,8 @@ return [
         'fonte' => './fonts/HelveticaNeue.ttc',
         'cor' => '#43808e',
         'cor_telefone' => '#43808e',
+        'endereco' => 'Arco Metropolitano, KM 107 – Seropédica, RJ',
+        'site' => 'https://ciclusrio.com.br/',
     ],
     'ambiental' => [
         'nome' => 'Ciclus Ambiental',
@@ -23,6 +27,8 @@ return [
         'fonte' => './fonts/intelo/Intelo-Regular.ttf',
         'cor' => '#424893',
         'cor_telefone' => '#d57c31',
+        'endereco' => 'Rua Doutor Renato Paes de Barros, nº 1.017, 8º andar - São Paulo/SP',
+        'site' => 'https://ciclusambiental.com.br/',
     ],
     'graos' => [
         'nome' => 'CS Graos do Piauí',
@@ -31,6 +37,8 @@ return [
         'fonte' => './fonts/intelo/Intelo-Regular.ttf',
         'cor' => '#424893',
         'cor_telefone' => '#d57c31',
+        'endereco' => 'Rodovia BR 135 km 148- Edifício DAYTOP – Zona Rural, Bom Jesus, PI',
+        'site' => 'https://csgraosdopiaui.com.br/',
     ],
     'infra' => [
         'nome' => 'CS Infra',
@@ -39,6 +47,8 @@ return [
         'fonte' => './fonts/intelo/Intelo-Regular.ttf',
         'cor' => '#424893',
         'cor_telefone' => '#d57c31',
+        'endereco' => 'Rua Doutor Renato Paes de Barros, nº 1.017, 8º andar - São Paulo/SP',
+        'site' => 'https://csinfra.com.br/',
     ],
     'mobi' => [
         'nome' => 'CS Mobi Cuiabá',
@@ -47,6 +57,8 @@ return [
         'fonte' => './fonts/intelo/Intelo-Regular.ttf',
         'cor' => '#424893',
         'cor_telefone' => '#d57c31',
+        'endereco' => 'Avenida Isaac Póvoas, 560 - Bairro Goiabeiras – Cuiabá/MT',
+        'site' => 'https://csmobicuiaba.com.br/',
     ],
     'portos' => [
         'nome' => 'Empresa CS Portos',
@@ -55,5 +67,7 @@ return [
         'fonte' => './fonts/intelo/Intelo-Regular.ttf',
         'cor' => '#424893',
         'cor_telefone' => '#d57c31',
+        'endereco' => 'Rodovia Matoim, S/N – Porto de Aratu - Candeias-Ba /',
+        'site' => 'https://csportoaratu.com.br/',
     ],
 ];
