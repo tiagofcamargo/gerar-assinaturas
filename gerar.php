@@ -77,7 +77,7 @@ $vcardLines = [
 $vcard = implode("\r\n", $vcardLines) . "\r\n";
 
 $len = strlen($vcard);
-$qrSide = $len > 300 ? 200 : ($len > 200 ? 180 : 120);
+$qrSide = $len > 300 ? 180 : ($len > 200 ? 130 : 120);
 
 $qr = Builder::create()
     ->writer(new PngWriter())
