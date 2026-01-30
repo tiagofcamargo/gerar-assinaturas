@@ -60,6 +60,16 @@ return [
         'endereco' => 'Avenida Isaac Póvoas, 560 - Bairro Goiabeiras – Cuiabá/MT',
         'site' => 'https://csrodoviasrotadaintegracao.com.br',
     ],
+    'mercovia' => [
+        'nome' => 'Cs Rodovias Mercosul',
+        'logo' => 'assets/mercovia/btn.png',
+        'base' => 'assets/mercovia/base.png',
+        'fonte' => './fonts/HelveticaNeue.ttc',
+        'cor' => '#424893',
+        'cor_telefone' => '#d57c31',
+        'endereco' => 'RN 121, km 5,5 Centro Unificado de Fronteira Santo Tomé – Corrientes, Argentina',
+        'site' => 'https://csrodoviasmercosul.com.br/',
+    ],
     'ambiental' => [
         'nome' => 'Ciclus Ambiental',
         'logo' => 'assets/ambiental/btn.png',
