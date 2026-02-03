@@ -66,7 +66,8 @@ $empresas = require __DIR__ . '/empresas.php';
           action="gerar.php"
           method="POST"
           <?= ($key === 'mercovia') ? 'data-requires-country="1" style="display:none;"' : '' ?>
-          data-ajax="1">
+          data-ajax="1"
+          data-email-domains="<?= htmlspecialchars(implode(',', $empresa['dominios_email'] ?? []), ENT_QUOTES, 'UTF-8') ?>">
 
           <input type="hidden" name="empresa" value="<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>">
           <input type="hidden" name="pais" value="">

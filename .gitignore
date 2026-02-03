@@ -1,6 +1,39 @@
-Dockerfile
-docker-compose.yml
-server.php
-/vendor
+# =========================
+# Dependências PHP
+# =========================
+/vendor/
+
+# =========================
+# Arquivos de ambiente
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Cache / temporários
+# =========================
+*.log
+/tmp/
+cache/
+
+# =========================
+# Uploads / arquivos gerados
+# =========================
+/assinaturas/*
+!/assinaturas/.gitkeep
+
+# =========================
+# Composer (Windows noise)
+# =========================
+.composer/
+composer.phar
+
+# =========================
+# Sistema / IDE
+# =========================
 .DS_Store
-/assets/.DS_Store
+**/.DS_Store
+.vscode/
+.idea/
+Thumbs.db

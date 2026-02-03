@@ -15,7 +15,18 @@ use Endroid\QrCode\ErrorCorrectionLevel;
 
 function hexToRgb(string $hex): array
 {
-    $hex = ltrim($hex, '#');
+    $hex = ltrim(trim($hex), '#');
+
+    // aceita #RGB
+    if (strlen($hex) === 3) {
+        $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+    }
+
+    // valida #RRGGBB
+    if (!preg_match('/^[0-9a-fA-F]{6}$/', $hex)) {
+        return [0, 0, 0];
+    }
+
     return [
         hexdec(substr($hex, 0, 2)),
         hexdec(substr($hex, 2, 2)),
@@ -131,6 +142,43 @@ function jsonError(string $message, int $status = 400): void
     exit;
 }
 
+/** vCard: escapa caracteres especiais */
+function vcardEscape(string $v): string
+{
+    $v = str_replace("\\", "\\\\", $v);
+    $v = str_replace(";", "\;", $v);
+    $v = str_replace(",", "\,", $v);
+    $v = preg_replace("/\r\n|\r|\n/", "\\n", $v);
+    return $v;
+}
+
+/** Domínio do e-mail */
+function getEmailDomain(string $email): string
+{
+    $email = trim(mb_strtolower($email));
+    $pos = strrpos($email, '@');
+    if ($pos === false) return '';
+    return substr($email, $pos + 1);
+}
+
+/** Checa domínio permitido (aceita subdomínios) */
+function emailDomainAllowed(string $emailDomain, array $allowedDomains): bool
+{
+    $emailDomain = trim(mb_strtolower($emailDomain));
+    if ($emailDomain === '') return false;
+
+    $allowedDomains = array_map(fn($d) => trim(mb_strtolower($d)), $allowedDomains);
+
+    foreach ($allowedDomains as $allowed) {
+        if ($allowed === '') continue;
+
+        if ($emailDomain === $allowed) return true;
+        if (str_ends_with($emailDomain, '.' . $allowed)) return true;
+    }
+
+    return false;
+}
+
 $empresas     = require __DIR__ . '/empresas.php';
 
 $empresaKey   = $_POST['empresa'] ?? '';
@@ -149,6 +197,29 @@ if (!isset($empresas[$empresaKey])) {
     die('Empresa inválida.');
 }
 
+/** valida campos obrigatórios */
+if ($primeiroNome === '' || $sobrenome === '' || $cargo === '' || $email === '' || $telefoneUI === '') {
+    if ($responseMode === 'json') jsonError('Preencha todos os campos.');
+    die('Preencha todos os campos.');
+}
+
+/** valida e-mail */
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if ($responseMode === 'json') jsonError('Email inválido.');
+    die('Email inválido.');
+}
+
+/** valida domínio permitido (por empresa) */
+$allowedDomains = $empresas[$empresaKey]['dominios_email'] ?? [];
+$emailDomain = getEmailDomain($email);
+
+if (!emailDomainAllowed($emailDomain, $allowedDomains)) {
+    $lista = implode(', ', $allowedDomains);
+    $msg = "Use um email empresarial do grupo. Domínios aceitos: {$lista}.";
+    if ($responseMode === 'json') jsonError($msg);
+    die($msg);
+}
+
 $endereco = $empresas[$empresaKey]['endereco'] ?? '';
 $site     = $empresas[$empresaKey]['site'] ?? '';
 $nomeCompleto = trim("$primeiroNome $sobrenome");
@@ -160,17 +231,25 @@ if ($telefoneVcard === '') {
 }
 
 /** ==== vCard (QR) ==== */
+$primeiroNomeV = vcardEscape($primeiroNome);
+$sobrenomeV    = vcardEscape($sobrenome);
+$nomeCompletoV = vcardEscape($nomeCompleto);
+$cargoV        = vcardEscape($cargo);
+$enderecoV     = vcardEscape($endereco);
+$siteV         = vcardEscape($site);
+$orgV          = vcardEscape($empresas[$empresaKey]['nome'] ?? '');
+
 $vcardLines = [
     'BEGIN:VCARD',
     'VERSION:3.0',
-    "N:$sobrenome;$primeiroNome;;;",
-    "FN:$nomeCompleto",
-    "ORG:{$empresas[$empresaKey]['nome']}",
-    "TITLE:$cargo",
+    "N:$sobrenomeV;$primeiroNomeV;;;",
+    "FN:$nomeCompletoV",
+    "ORG:$orgV",
+    "TITLE:$cargoV",
     "TEL;TYPE=CELL:$telefoneVcard",
     "EMAIL:$email",
-    "ADR;TYPE=WORK:;;{$endereco};;;;",
-    "URL:{$site}",
+    "ADR;TYPE=WORK:;;$enderecoV;;;;",
+    "URL:$siteV",
     'END:VCARD',
 ];
 $vcard = implode("\r\n", $vcardLines) . "\r\n";
@@ -241,10 +320,11 @@ if (!file_exists($fonteRegular)) {
 }
 
 /** ==== CORES ==== */
-list($r, $g, $b)    = hexToRgb($empresas[$empresaKey]['cor']);
+list($r, $g, $b)    = hexToRgb($empresas[$empresaKey]['cor'] ?? '#000000');
 $corNome            = imagecolorallocate($imagem, $r, $g, $b);
 $cinza              = imagecolorallocate($imagem, 128, 128, 128);
-list($rt, $gt, $bt) = hexToRgb($empresas[$empresaKey]['cor_telefone']);
+
+list($rt, $gt, $bt) = hexToRgb($empresas[$empresaKey]['cor_telefone'] ?? '#000000');
 $corTelefone        = imagecolorallocate($imagem, $rt, $gt, $bt);
 
 /** ==== POSICIONAMENTO ==== */

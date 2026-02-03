@@ -93,6 +93,35 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /** =========================
+   * Validação de e-mail (domínio por empresa)
+   * ========================= */
+  function normalizeDomain(d) {
+    return String(d || '').trim().toLowerCase();
+  }
+
+  function getEmailDomain(email) {
+    email = String(email || '').trim().toLowerCase();
+    const at = email.lastIndexOf('@');
+    if (at === -1) return '';
+    return email.slice(at + 1).trim();
+  }
+
+  function domainAllowed(emailDomain, allowedDomains) {
+    const domain = normalizeDomain(emailDomain);
+    if (!domain) return false;
+
+    const allowed = (allowedDomains || []).map(normalizeDomain).filter(Boolean);
+
+    return allowed.some(a => domain === a || domain.endsWith('.' + a));
+  }
+
+  function getAllowedDomainsFromForm(form) {
+    // precisa existir no HTML: data-email-domains="dominio1.com.br,dominio2.com.br"
+    const raw = form?.dataset?.emailDomains || '';
+    return raw.split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  /** =========================
    * MÁSCARAS DE TELEFONE
    * ========================= */
   function onlyDigits(value) {
@@ -167,6 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
         submitting: 'Gerando…',
       },
       phonePlaceholder: '(11) 9 1234-5678',
+      emailDomainError: (domains) =>
+        `Use um email empresarial do domínio: ${domains.join(', ')}.`,
     },
     AR: {
       question: '¿Eres empleado de qué país?',
@@ -180,6 +211,8 @@ document.addEventListener('DOMContentLoaded', () => {
         submitting: 'Generando…',
       },
       phonePlaceholder: '11 1234-5678',
+      emailDomainError: (domains) =>
+        `Usa un correo empresarial del dominio: ${domains.join(', ')}.`,
     }
   };
 
@@ -307,6 +340,25 @@ document.addEventListener('DOMContentLoaded', () => {
       const modal = form.closest('.modal');
       const btn = form.querySelector('button[type="submit"]');
       setError(modal, '');
+
+      // ======= NOVO: valida domínio do e-mail ANTES de enviar =======
+      const emailInput = form.querySelector('input[name="email"]');
+      const allowedDomains = getAllowedDomainsFromForm(form);
+
+      if (emailInput && allowedDomains.length) {
+        const domain = getEmailDomain(emailInput.value);
+
+        if (!domainAllowed(domain, allowedDomains)) {
+          const country = (modal?.querySelector('input[name="pais"]')?.value || 'BR').toUpperCase();
+          const t = i18n[country] || i18n.BR;
+
+          setError(modal, t.emailDomainError(allowedDomains));
+          setButtonLoading(btn, false);
+          emailInput.focus();
+          return;
+        }
+      }
+      // =============================================================
 
       if (btn && btn.classList.contains('is-loading')) return;
       setButtonLoading(btn, true);
